@@ -45,22 +45,26 @@ module.exports = function run(
     ...(packageJson.bundlesDependencies ?? {}),
   });
 
-  const hash = crypto.createHash('sha256');
-
-  const dependenciesHash = hash
+  const dependenciesHash = crypto.createHash('sha256')
     .update(
       dependenciesArray
         .map(([name, version]) => `${name}@${version}`)
         .sort()
         .join('\n'),
     )
-    .digest('base64');
+    .digest('hex');
+
+  const workingDirectoryHash = crypto.createHash('sha256')
+    .update(inputs['working-directory'])
+    .digest('hex')
+    .slice(0, 7)
 
   const nodeModulesCachePrefix = [
     inputs['cache-prefix'],
     runsOn,
     inputs['node-version'].replace(/[/.]/g, '-'),
     packageManager,
+    workingDirectoryHash,
   ].join('-');
 
   const outputs = {
@@ -71,12 +75,13 @@ module.exports = function run(
     'lockfile': lockfile,
     'node-modules-cache-prefix': nodeModulesCachePrefix,
     'package-manager': packageManager,
+    'working-directory-hash': workingDirectoryHash,
   };
-
-  console.log('--- setup-js metadata ---');
-  console.log(outputs);
 
   Object.entries(outputs).forEach(([name, value]) => {
     core.setOutput(name, value);
   });
+
+  // Log for debugging purposes.
+  console.log(outputs);
 }
