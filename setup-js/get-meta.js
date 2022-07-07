@@ -73,6 +73,9 @@ module.exports = function run(
     'package-manager': packageManager,
   };
 
+  console.log('--- setup-js metadata ---');
+  console.log(outputs);
+
   Object.entries(outputs).forEach(([name, value]) => {
     core.setOutput(name, value);
   });
