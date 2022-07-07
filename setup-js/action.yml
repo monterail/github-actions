@@ -1,0 +1,122 @@
+name: 'setup-js'
+description: 'Provide different strategies for getting hash of npm lock files or dependencies'
+inputs:
+  package-manager:
+    required: false
+    default: 'npm'
+  install-command:
+    required: false
+    default: ''
+  install-args:
+    required: false
+    default: ''
+  hash-strategy:
+    required: false
+    default: ''
+  cache-prefix:
+    required: false
+    default: 'v1'
+  node-version:
+    required: false
+    default: 'lts/gallium'
+  working-directory:
+    required: false
+    default: '.'
+outputs:
+  metadata:
+    description: "Calculated metadata"
+    value: ${{ steps.metadata.outputs }}
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ inputs.node-version }}
+        cache: ${{ inputs.package-manager }}
+
+    - uses: actions/github-script@v6
+      id: metadata
+      with:
+        script: |
+          const crypto = require('crypto');
+          const fs = require('fs');
+
+          if (!fs.existSync('package.json')) {
+            throw new Error('No package.json found in current directory');
+          }
+
+          const packageJson = JSON.parse(
+            fs.readFileSync('package.json').toString(),
+          );
+
+          const packageManager = '${{ inputs.packageManager }}'.toLowerCase();
+
+          const isYarn = packageManager === 'yarn';
+
+          const installCommand:
+            '${{ inputs.install-command }}' ||
+            (isYarn ? 'yarn install' : 'npm i');
+
+          const lockfile = isYarn ?
+            'yarn.lock' : 'package-lock.json';
+
+          const hashStrategy =
+            '${{ inputs.hash-strategy }}' ||
+            (fs.existSync(lockfile) ? 'lockfile' : 'dependencies');
+
+          const dependenciesArray = Object.entries({
+            ...(packageJson.dependencies ?? {}),
+            ...(packageJson.devDependencies ?? {}),
+            ...(packageJson.peerDependencies ?? {}),
+            ...(packageJson.optionalDependencies ?? {}),
+            ...(packageJson.bundlesDependencies ?? {}),
+          });
+
+          const hash = crypto.createHash('sha256');
+
+          const dependenciesHash = hash
+            .update(
+              dependenciesArray
+              .map(([name, version]) => `${name}@${version}`)
+              .sort()
+              .join('\n'),
+            )
+            .digest('base64');
+
+          const nodeModulesCachePrefix = [
+            '${{ inputs.cache-prefix }}',
+            '${{ runner.os }}',
+            '${{ inputs.node-version }}',
+            packageManager,
+            'node_modules',
+          ].join('-');
+
+          const metadata = {
+            'dependencies-hash': dependenciesHash,
+            'hash-strategy': hashStrategy,
+            'install-command': installCommand,
+            'lockfile': lockfile,
+            'node-modules-cache-prefix': nodeModulesCachePrefix,
+            'package-manager': packageManager,
+          };
+
+          // Log this for debugging purposes.
+          console.log(metadata);
+
+          return metadata;
+
+    - name: Restore node_modules from cache
+      uses: actions/cache@v3
+      with:
+        path: ${{ inputs.working-directory }}/node_modules
+        key: ${{ steps.metadata.outputs.node-modules-cache-prefix }}-${{
+          steps.metadata.outputs.hash-strategy == 'lockfile' &&
+           hashFiles(steps.metadata.outputs.lockfile) || steps.metadata.outputs.dependencies-hash }}
+        restore-keys: |
+          ${{ steps.metadata.outputs.node-modules-cache-prefix }}
+
+    - name: Install NPM packages
+      run: ${{ steps.metadata.outputs.install-command }} ${{ inputs.install-args }}
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
