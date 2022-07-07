@@ -1,18 +1,15 @@
 name: 'setup-js'
-description: 'Provide different strategies for getting hash of npm lock files or dependencies'
+description: 'Setup Node, cache global and local node modules, install dependencies'
 inputs:
   package-manager:
     required: false
     default: 'npm'
   install-command:
     required: false
-    default: ''
   install-args:
     required: false
-    default: ''
   hash-strategy:
     required: false
-    default: ''
   cache-prefix:
     required: false
     default: 'v1'
@@ -23,9 +20,9 @@ inputs:
     required: false
     default: '.'
 outputs:
-  metadata:
-    description: "Calculated metadata"
-    value: ${{ steps.metadata.outputs }}
+  metadata-json-string:
+    description: 'All metadata calculated for this action run'
+    value: ${{ toJSON(steps.metadata.outputs) }}
 runs:
   using: 'composite'
   steps:
@@ -33,90 +30,49 @@ runs:
       uses: actions/setup-node@v3
       with:
         node-version: ${{ inputs.node-version }}
-        cache: ${{ inputs.package-manager }}
 
     - uses: actions/github-script@v6
       id: metadata
+      env:
+        GITHUB_ACTION_PATH: ${{ github.action_path }}
       with:
         script: |
-          const crypto = require('crypto');
-          const fs = require('fs');
+          const path = require('path');
 
-          if (!fs.existSync('package.json')) {
-            throw new Error('No package.json found in current directory');
-          }
-
-          const packageJson = JSON.parse(
-            fs.readFileSync('package.json').toString(),
-          );
-
-          const packageManager = '${{ inputs.packageManager }}'.toLowerCase();
-
-          const isYarn = packageManager === 'yarn';
-
-          const installCommand:
-            '${{ inputs.install-command }}' ||
-            (isYarn ? 'yarn install' : 'npm i');
-
-          const lockfile = isYarn ?
-            'yarn.lock' : 'package-lock.json';
-
-          const hashStrategy =
-            '${{ inputs.hash-strategy }}' ||
-            (fs.existSync(lockfile) ? 'lockfile' : 'dependencies');
-
-          const dependenciesArray = Object.entries({
-            ...(packageJson.dependencies ?? {}),
-            ...(packageJson.devDependencies ?? {}),
-            ...(packageJson.peerDependencies ?? {}),
-            ...(packageJson.optionalDependencies ?? {}),
-            ...(packageJson.bundlesDependencies ?? {}),
+          // path.format makes sure to format the path correctly
+          // on windows
+          const requireSource = path.format({
+            dir: process.env.GITHUB_ACTION_PATH,
+            base: 'get-meta.js',
           });
 
-          const hash = crypto.createHash('sha256');
+          const script = require(requireSource);
 
-          const dependenciesHash = hash
-            .update(
-              dependenciesArray
-              .map(([name, version]) => `${name}@${version}`)
-              .sort()
-              .join('\n'),
-            )
-            .digest('base64');
+          script({
+            github,
+            core,
+            inputs: ${{ toJSON(inputs) }},
+            runsOn: '${{ runner.os }}',
+          });
 
-          const nodeModulesCachePrefix = [
-            '${{ inputs.cache-prefix }}',
-            '${{ runner.os }}',
-            '${{ inputs.node-version }}',
-            packageManager,
-            'node_modules',
-          ].join('-');
+    - name: Get global cache directory
+      shell: bash
+      id: global-cache-dir
+      run: echo "::set-output name=dir::$(${{ steps.metadata.outputs.get-cache-dir-command }})"
 
-          const metadata = {
-            'dependencies-hash': dependenciesHash,
-            'hash-strategy': hashStrategy,
-            'install-command': installCommand,
-            'lockfile': lockfile,
-            'node-modules-cache-prefix': nodeModulesCachePrefix,
-            'package-manager': packageManager,
-          };
-
-          // Log this for debugging purposes.
-          console.log(metadata);
-
-          return metadata;
-
-    - name: Restore node_modules from cache
+    - name: Restore node_modules cache
       uses: actions/cache@v3
       with:
-        path: ${{ inputs.working-directory }}/node_modules
+        path: |
+          ${{ steps.global-cache-dir.outputs.dir }}
+          ${{ inputs.working-directory }}/node_modules
         key: ${{ steps.metadata.outputs.node-modules-cache-prefix }}-${{
           steps.metadata.outputs.hash-strategy == 'lockfile' &&
            hashFiles(steps.metadata.outputs.lockfile) || steps.metadata.outputs.dependencies-hash }}
         restore-keys: |
           ${{ steps.metadata.outputs.node-modules-cache-prefix }}
 
-    - name: Install NPM packages
+    - name: Install npm packages
       run: ${{ steps.metadata.outputs.install-command }} ${{ inputs.install-args }}
       shell: bash
       working-directory: ${{ inputs.working-directory }}
