@@ -34,7 +34,7 @@ jobs:
             copyFileSync('./.artifacts/package-lock', './package-lock.json');
 
       - name: Setup and install
-        uses: jedrzejginter/github-actions/setup-js@main
+        uses: jedrzejginter/github-actions/setup-js@${{ github.sha }}
         id: setup
         with:
           package-manager: ${{ matrix.package-manager }}
