@@ -21,7 +21,8 @@ module.exports = function run(
     fs.readFileSync('package.json').toString(),
   );
 
-  const packageManager = inputs['package-manager'].toLowerCase();
+  /** @type {string} */
+  const packageManager = (inputs['package-manager'] || 'npm').toLowerCase();
 
   const isYarn = packageManager === 'yarn';
 
@@ -56,14 +57,14 @@ module.exports = function run(
     .digest('hex');
 
   const workingDirectoryHash = crypto.createHash('sha256')
-    .update(inputs['working-directory'])
+    .update(inputs['working-directory'] || '.')
     .digest('hex')
     .slice(0, 7)
 
   const nodeModulesCachePrefix = [
     inputs['cache-prefix'],
     runsOn,
-    inputs['node-version'].replace(/[/.]/g, '-'),
+    (inputs['node-version'] || 'lts/gallium').replace(/[/.]/g, '-'),
     packageManager,
     workingDirectoryHash,
   ].join('-');

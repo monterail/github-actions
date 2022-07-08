@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": true,
+    "declaration": false,
+    "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "Node",
+    "noImplicitAny": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noUncheckedIndexedAccess": true,
+    "removeComments": false,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "strict": true,
+    "outDir": "dist",
+    "noEmit": false,
+    "useUnknownInCatchVariables": true
+  },
+  "include": ["*.js"],
+  "exclude": ["node_modules", "dist"]
+}

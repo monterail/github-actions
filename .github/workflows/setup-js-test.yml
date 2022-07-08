@@ -9,6 +9,21 @@ on:
     branches: ['**']
 
 jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.pull_request.draft == false }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: setup-js
+
+      - name: Typecheck
+        run: npm run typecheck
+        working-directory: setup-js
+
   test:
     runs-on: ${{ matrix.os }}
     if: ${{ github.event.pull_request.draft == false }}
@@ -43,8 +58,3 @@ jobs:
         id: setup
         with:
           package-manager: ${{ matrix.package-manager }}
-
-      - name: Debug log
-        uses: actions/github-script@v6
-        with:
-          script: console.log(${{ steps.setup.outputs.metadata-json-string }})
