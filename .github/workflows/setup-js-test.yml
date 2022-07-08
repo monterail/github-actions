@@ -2,11 +2,16 @@ name: setup-js-test
 
 on:
   push:
+    branches: ['main']
+
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
     branches: ['**']
 
 jobs:
-  checks:
+  test:
     runs-on: ${{ matrix.os }}
+    if: ${{ github.event.pull_request.draft == false }}
     strategy:
       matrix:
         lockfile-mode: ['with-lockfile', 'no-lockfile']

@@ -7,5 +7,5 @@ This repository contains set of reusable Github Actions ready to use in projects
 
 ## Actions
 
-- [**`setup-js`**](./setup-js/readme.md)
-  > Setup Node and install npm/ Yarn dependencies
+- [**`setup-js`**](./setup-js/readme.md)\
+  _Setup Node and install npm/ Yarn dependencies_
