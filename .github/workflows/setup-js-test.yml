@@ -17,7 +17,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Install dependencies
-        run: npm ci
+        run: npm i
         working-directory: setup-js
 
       - name: Typecheck
