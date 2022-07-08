@@ -14,6 +14,7 @@ module.exports = function run(
   { core, github, inputs, runsOn }) {
   if (!fs.existsSync('package.json')) {
     core.setFailed('No package.json found in current directory');
+    return
   }
 
   const packageJson = JSON.parse(
