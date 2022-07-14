@@ -17,6 +17,7 @@ module.exports = function run(
     return
   }
 
+  /** @type {import('type-fest').PackageJson} */
   const packageJson = JSON.parse(
     fs.readFileSync('package.json').toString(),
   );
@@ -44,7 +45,7 @@ module.exports = function run(
     ...(packageJson.devDependencies ?? {}),
     ...(packageJson.peerDependencies ?? {}),
     ...(packageJson.optionalDependencies ?? {}),
-    ...(packageJson.bundlesDependencies ?? {}),
+    ...(packageJson.bundledDependencies ?? {}),
   });
 
   const dependenciesHash = crypto.createHash('sha256')
