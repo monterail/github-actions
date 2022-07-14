@@ -17,6 +17,7 @@ module.exports = function run(
     return
   }
 
+  /** @type {import('type-fest').PackageJson} */
   const packageJson = JSON.parse(
     fs.readFileSync('package.json').toString(),
   );
