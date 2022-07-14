@@ -44,7 +44,6 @@ module.exports = function run(
     ...(packageJson.devDependencies ?? {}),
     ...(packageJson.peerDependencies ?? {}),
     ...(packageJson.optionalDependencies ?? {}),
-    ...(packageJson.bundlesDependencies ?? {}),
   });
 
   const dependenciesHash = crypto.createHash('sha256')
