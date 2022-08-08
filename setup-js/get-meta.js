@@ -2,16 +2,33 @@ const crypto = require('crypto');
 const fs = require('fs');
 
 /**
+ *
+ * @typedef {{
+ *  'cache-prefix'?: string;
+ *  'hash-strategy'?: string;
+ *  'install-args'?: string;
+ *  'install-command'?: string;
+ *  'node-version'?: string;
+ *  'package-manager'?: string;
+ *  'working-directory'?: string;
+ * }} Inputs
+ *
  * @typedef {{
  *  core: import('@actions/core'),
  *  github: import('@actions/github'),
- *  inputs: Record<string, string>,
+ *  inputs: Inputs,
  *  runsOn: string,
  * }} RootContext */
 
 module.exports = function run(
   /** @type {RootContext} */
   { core, github, inputs, runsOn }) {
+  const workingDirectory = inputs['working-directory']
+
+  if (typeof workingDirectory === 'string') {
+    process.chdir(workingDirectory)
+  }
+
   if (!fs.existsSync('package.json')) {
     core.setFailed('No package.json found in current directory');
     return

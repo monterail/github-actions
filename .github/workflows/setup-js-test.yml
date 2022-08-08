@@ -58,3 +58,20 @@ jobs:
         id: setup
         with:
           package-manager: ${{ matrix.package-manager }}
+
+  test-subdirectory:
+    if: ${{ github.event.pull_request.draft == false }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Create example package.json and lockfile
+        run: |
+          mkdir app
+          cp ./.artifacts/package-json ./app/package.json
+          cp ./.artifacts/package-lock ./app/package-lock.json
+
+      - name: Setup and install
+        uses: ./setup-js
+        with:
+          working-directory: app
