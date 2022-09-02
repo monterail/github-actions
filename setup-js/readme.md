@@ -35,7 +35,7 @@
     install-command: ''
 
     # Additional arguments to pass to install command.
-    # Example: '--legacy-peer-deps'
+    # Example: '--force'
     install-args: ''
 
     # Prefix to add to global/ node_modules cache.
