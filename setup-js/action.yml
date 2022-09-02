@@ -72,6 +72,10 @@ runs:
         restore-keys: |
           ${{ steps.metadata.outputs.node-modules-cache-prefix }}
 
+    - name: Print package manager version
+      run: ${{ steps.metadata.outputs.package-manager-version-command }}
+      shell: bash
+
     - name: Install npm packages
       run: ${{ steps.metadata.outputs.install-command }} ${{ inputs.install-args }}
       shell: bash

@@ -48,6 +48,8 @@ module.exports = function run(
     inputs['install-command'] ||
     (isYarn ? 'yarn install' : 'npm i');
 
+  const versionCommand = (isYarn ? 'yarn -v' : 'npm -v');
+
   const getCacheDirCommand = isYarn ? 'yarn cache dir' : 'npm config get cache'
 
   const lockfile = isYarn ?
@@ -96,6 +98,7 @@ module.exports = function run(
     'node-modules-cache-prefix': nodeModulesCachePrefix,
     'package-manager': packageManager,
     'working-directory-hash': workingDirectoryHash,
+    'package-manager-version-command': versionCommand,
   };
 
   Object.entries(outputs).forEach(([name, value]) => {
