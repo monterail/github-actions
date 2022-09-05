@@ -49,7 +49,7 @@
     # Set to false to disable cache.
     #
     # Default: true
-    enable-cache: true
+    cache: true
 
     # Whether to use hash of lockfile (package-lock.json or yarn.lock)
     # or hash or dependencies inside package.json as part of cache key
