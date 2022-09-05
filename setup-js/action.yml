@@ -1,6 +1,9 @@
 name: 'setup-js'
 description: 'Setup Node, cache global and local node modules, install dependencies'
 inputs:
+  cache:
+    required: false
+    default: true
   package-manager:
     required: false
     default: 'npm'
@@ -61,6 +64,7 @@ runs:
       run: echo "::set-output name=dir::$(${{ steps.metadata.outputs.get-cache-dir-command }})"
 
     - name: Restore node_modules cache
+      if: ${{ inputs.cache }}
       uses: actions/cache@v3
       with:
         path: |

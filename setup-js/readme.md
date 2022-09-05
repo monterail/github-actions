@@ -44,6 +44,13 @@
     # Default: 'v1'
     cache-prefix: ''
 
+    # If global npm/Yarn cache and local node_modules directory
+    # should be downloaded.
+    # Set to false to disable cache.
+    #
+    # Default: true
+    cache: true
+
     # Whether to use hash of lockfile (package-lock.json or yarn.lock)
     # or hash or dependencies inside package.json as part of cache key
     # for global cache/ node_modules cache.
