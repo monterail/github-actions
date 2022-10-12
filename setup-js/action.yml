@@ -61,7 +61,7 @@ runs:
     - name: Get global cache directory
       shell: bash
       id: global-cache-dir
-      run: echo "::set-output name=dir::$(${{ steps.metadata.outputs.get-cache-dir-command }})"
+      run: echo "dir=$(${{ steps.metadata.outputs.get-cache-dir-command }})" >> $GITHUB_OUTPUT
 
     - name: Restore node_modules cache
       if: ${{ inputs.cache }}
