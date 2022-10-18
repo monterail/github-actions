@@ -6,20 +6,17 @@ function findGitRoot(
   /** @type {string} */
   pathname,
   /** @type {number} */
-  remainingAttempts = 5
+  remainingAttempts = 5,
 ) {
   if (remainingAttempts === 0) {
-    return null
+    return null;
   }
 
   if (fs.existsSync(join(pathname, '.git'))) {
-    return pathname
+    return pathname;
   }
 
-  return findGitRoot(
-    dirname(pathname),
-    remainingAttempts - 1,
-  );
+  return findGitRoot(dirname(pathname), remainingAttempts - 1);
 }
 
 /**
@@ -46,71 +43,64 @@ module.exports = async function run(
   /** @type {RootContext} */
   { core, glob, github, inputs, runsOn },
 ) {
-
   if (!inputs['node-version']) {
     core.warning(`It is recommended to always set 'node-version'`);
   }
 
-  const workingDirectory = inputs['working-directory']
+  const workingDirectory = inputs['working-directory'];
 
   if (typeof workingDirectory === 'string') {
-    process.chdir(workingDirectory)
+    process.chdir(workingDirectory);
   }
 
   if (!fs.existsSync('package.json')) {
     core.setFailed('No package.json found in current directory');
-    return
+    return;
   }
 
   let isMonorepo = false;
 
   const gitRoot = findGitRoot(__dirname);
 
-
+  if (!gitRoot) {
+    core.setFailed('Failed to determine .git directory location');
+    return;
+  }
 
   try {
-    if (gitRoot) {
-      /** @type {import('type-fest').PackageJson} */
-      const gitRootPackageJson = JSON.parse(
-        fs.readFileSync(join(gitRoot, 'package.json')).toString(),
-      );
+    /** @type {import('type-fest').PackageJson} */
+    const gitRootPackageJson = JSON.parse(
+      fs.readFileSync(join(gitRoot, 'package.json')).toString(),
+    );
 
-      isMonorepo = 'workspaces' in gitRootPackageJson;
-    }
-
+    isMonorepo = 'workspaces' in gitRootPackageJson;
   } catch {
     // Ignore if there is no package.json in the root directory.
   }
 
   /** @type {import('type-fest').PackageJson} */
-  const packageJson = JSON.parse(
-    fs.readFileSync('package.json').toString(),
-  );
+  const packageJson = JSON.parse(fs.readFileSync('package.json').toString());
 
   /** @type {string} */
   const packageManager = (inputs['package-manager'] || 'npm').toLowerCase();
 
   const isYarn = packageManager === 'yarn';
 
-  const installCommand =
-    inputs['install-command'] ||
-    (isYarn ? 'yarn install' : 'npm i');
+  const installCommand = inputs['install-command'] || (isYarn ? 'yarn install' : 'npm i');
 
-  const versionCommand = (isYarn ? 'yarn -v' : 'npm -v');
+  const versionCommand = isYarn ? 'yarn -v' : 'npm -v';
 
-  const getCacheDirCommand = isYarn ? 'yarn cache dir' : 'npm config get cache'
+  const getCacheDirCommand = isYarn ? 'yarn cache dir' : 'npm config get cache';
 
-  const lockfile = isYarn ?
-    'yarn.lock' : 'package-lock.json';
+  const lockfile = isYarn ? 'yarn.lock' : 'package-lock.json';
 
-  const hashFiles = `**/${lockfile}`
+  const hashFiles = `**/${lockfile}`;
 
-  const globber = await glob.create(hashFiles);
+  const globber = await glob.create(`${gitRoot}/${hashFiles}`);
   const files = await globber.glob();
 
   const hashStrategy =
-    inputs['hash-strategy'] ||
-    (fs.existsSync(lockfile) ? 'lockfile' : 'dependencies');
+    inputs['hash-strategy'] || (fs.existsSync(lockfile) ? 'lockfile' : 'dependencies');
 
   const dependenciesArray = Object.entries({
     ...(packageJson.dependencies ?? {}),
@@ -121,7 +111,8 @@ module.exports = async function run(
     ...(packageJson.bundledDependencies ?? {}),
   });
 
-  const dependenciesHash = crypto.createHash('sha256')
+  const dependenciesHash = crypto
+    .createHash('sha256')
     .update(
       dependenciesArray
         .map(([name, version]) => `${name}@${version}`)
@@ -130,10 +121,11 @@ module.exports = async function run(
     )
     .digest('hex');
 
-  const workingDirectoryHash = crypto.createHash('sha256')
+  const workingDirectoryHash = crypto
+    .createHash('sha256')
     .update(inputs['working-directory'] || '.')
     .digest('hex')
-    .slice(0, 7)
+    .slice(0, 7);
 
   const nodeModulesCachePrefix = [
     inputs['cache-prefix'],
@@ -153,7 +145,7 @@ module.exports = async function run(
     'hash-files': hashFiles,
     'hash-strategy': hashStrategy,
     'install-command': installCommand,
-    'lockfile': lockfile,
+    lockfile: lockfile,
     'node-modules-cache-prefix': nodeModulesCachePrefix,
     'package-manager-version-command': versionCommand,
     'package-manager': packageManager,
@@ -166,4 +158,4 @@ module.exports = async function run(
 
   // Log for debugging purposes.
   console.log(outputs);
-}
+};
