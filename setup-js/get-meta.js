@@ -23,6 +23,11 @@ const fs = require('fs');
 module.exports = function run(
   /** @type {RootContext} */
   { core, github, inputs, runsOn }) {
+
+  if (!inputs['node-version']) {
+    core.warning(`It is recommended to always set 'node-version'`);
+  }
+
   const workingDirectory = inputs['working-directory']
 
   if (typeof workingDirectory === 'string') {
@@ -54,6 +59,8 @@ module.exports = function run(
 
   const lockfile = isYarn ?
     'yarn.lock' : 'package-lock.json';
+
+  const hashFiles = `**/${lockfile}`
 
   const hashStrategy =
     inputs['hash-strategy'] ||
@@ -93,6 +100,7 @@ module.exports = function run(
     'dependencies-hash': dependenciesHash,
     'get-cache-dir-command': getCacheDirCommand,
     'hash-strategy': hashStrategy,
+    'hash-files': hashFiles,
     'install-command': installCommand,
     'lockfile': lockfile,
     'node-modules-cache-prefix': nodeModulesCachePrefix,

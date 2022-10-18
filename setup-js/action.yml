@@ -72,7 +72,7 @@ runs:
           ${{ inputs.working-directory }}/node_modules
         key: ${{ steps.metadata.outputs.node-modules-cache-prefix }}-${{
           steps.metadata.outputs.hash-strategy == 'lockfile' &&
-           hashFiles(steps.metadata.outputs.lockfile) || steps.metadata.outputs.dependencies-hash }}
+           hashFiles(steps.metadata.outputs.hash-files) || steps.metadata.outputs.dependencies-hash }}
         restore-keys: |
           ${{ steps.metadata.outputs.node-modules-cache-prefix }}
 

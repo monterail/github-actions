@@ -100,5 +100,8 @@ jobs:
 
       - name: Test if 'hash-strategy' is set to 'lockfile'
         run: |
-          if [[ "${{ steps.setup.outputs.hash-strategy }}" == "lockfile" ]]; then exit 1 fi
+          if [[ "${{ steps.setup.outputs.hash-strategy }}" == "lockfile" ]]
+          then
+            exit 1
+          fi
 
