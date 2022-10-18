@@ -14,7 +14,7 @@ jobs:
     if: ${{ github.event.pull_request.draft == false }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Install dependencies
         run: npm i
@@ -34,7 +34,7 @@ jobs:
         os: [ubuntu-latest, windows-latest]
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Create example package.json
         run: cp ./.artifacts/package-json ./package.json
@@ -64,7 +64,7 @@ jobs:
     if: ${{ github.event.pull_request.draft == false }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Create example package.json and lockfile
         run: |
@@ -82,7 +82,7 @@ jobs:
     # if: ${{ github.event.pull_request.draft == false }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Create lockfile in the root
         run: cp ./.artifacts/package-lock-workspaces ./package-lock.json
