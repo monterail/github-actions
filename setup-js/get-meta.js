@@ -1,6 +1,6 @@
 const crypto = require('crypto');
 const fs = require('fs');
-const {dirname, join} = require('path');
+const { dirname, join } = require('path');
 
 function findGitRoot(
   /** @type {string} */
@@ -37,13 +37,14 @@ function findGitRoot(
  * @typedef {{
  *  core: import('@actions/core'),
  *  github: import('@actions/github'),
+ *  glob: import('@actions/glob'),
  *  inputs: Inputs,
  *  runsOn: string,
  * }} RootContext */
 
 module.exports = function run(
   /** @type {RootContext} */
-  { core, github, inputs, runsOn }) {
+  { core, glob, github, inputs, runsOn }) {
 
   if (!inputs['node-version']) {
     core.warning(`It is recommended to always set 'node-version'`);
@@ -60,7 +61,25 @@ module.exports = function run(
     return
   }
 
+  let isMonorepo = false;
+
   const gitRoot = findGitRoot(__dirname);
+
+
+
+  try {
+    if (gitRoot) {
+      /** @type {import('type-fest').PackageJson} */
+      const gitRootPackageJson = JSON.parse(
+        fs.readFileSync(join(gitRoot, 'package.json')).toString(),
+      );
+
+      isMonorepo = 'workspaces' in gitRootPackageJson;
+    }
+
+  } catch {
+    // Ignore if there is no package.json in the root directory.
+  }
 
   /** @type {import('type-fest').PackageJson} */
   const packageJson = JSON.parse(
@@ -85,6 +104,9 @@ module.exports = function run(
 
   const hashFiles = `**/${lockfile}`
 
+  const globber = await glob.create(hashFiles);
+  const files = await globber.glob();
+
   const hashStrategy =
     inputs['hash-strategy'] ||
     (fs.existsSync(lockfile) ? 'lockfile' : 'dependencies');
@@ -94,6 +116,7 @@ module.exports = function run(
     ...(packageJson.devDependencies ?? {}),
     ...(packageJson.peerDependencies ?? {}),
     ...(packageJson.optionalDependencies ?? {}),
+    ...(packageJson.bundleDependencies ?? {}),
     ...(packageJson.bundledDependencies ?? {}),
   });
 
@@ -120,6 +143,9 @@ module.exports = function run(
   ].join('-');
 
   const outputs = {
+    cwd: process.cwd(),
+    files,
+    'is-monorepo': isMonorepo,
     'dependencies-hash': dependenciesHash,
     'get-cache-dir-command': getCacheDirCommand,
     'git-root': gitRoot,

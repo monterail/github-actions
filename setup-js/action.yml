@@ -71,6 +71,7 @@ runs:
           script({
             github,
             core,
+            glob,
             inputs: ${{ toJSON(inputs) }},
             runsOn: '${{ runner.os }}',
           });
