@@ -27,20 +27,22 @@ outputs:
     value: ${{ steps.metadata.outputs.dependencies-hash }}
   get-cache-dir-command:
     value: ${{ steps.metadata.outputs.get-cache-dir-command }}
-  hash-strategy:
-    value: ${{ steps.metadata.outputs.hash-strategy }}
   hash-files:
     value: ${{ steps.metadata.outputs.hash-files }}
+  hash-strategy:
+    value: ${{ steps.metadata.outputs.hash-strategy }}
   install-command:
     value: ${{ steps.metadata.outputs.install-command }}
   lockfile:
     value: ${{ steps.metadata.outputs.lockfile }}
   node-modules-cache-prefix:
     value: ${{ steps.metadata.outputs.node-modules-cache-prefix }}
-  package-manager:
-    value: ${{ steps.metadata.outputs.package-manager }}
+  node-modules-cache-suffix:
+    value: ${{ steps.metadata.outputs.node-modules-cache-suffix }}
   package-manager-version-command:
     value: ${{ steps.metadata.outputs.package-manager-version-command }}
+  package-manager:
+    value: ${{ steps.metadata.outputs.package-manager }}
   working-directory-hash:
     value: ${{ steps.metadata.outputs.working-directory-hash }}
 runs:
@@ -88,9 +90,7 @@ runs:
         path: |
           ${{ steps.global-cache-dir.outputs.dir }}
           ${{ inputs.working-directory }}/node_modules
-        key: ${{ steps.metadata.outputs.node-modules-cache-prefix }}-${{
-          steps.metadata.outputs.hash-strategy == 'lockfile' &&
-           hashFiles(steps.metadata.outputs.hash-files) || steps.metadata.outputs.dependencies-hash }}
+        key: ${{ steps.metadata.outputs.node-modules-cache-prefix }}-${{ steps.metadata.outputs.node-modules-cache-suffix }}
         restore-keys: |
           ${{ steps.metadata.outputs.node-modules-cache-prefix }}
 

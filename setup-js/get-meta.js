@@ -71,7 +71,10 @@ module.exports = async function run(
       fs.readFileSync(join(gitRoot, 'package.json')).toString(),
     );
 
-    isMonorepo = 'workspaces' in gitRootPackageJson;
+    isMonorepo =
+      'workspaces' in gitRootPackageJson ||
+      fs.existsSync(join(gitRoot, 'turbo.json')) ||
+      fs.existsSync(join(gitRoot, 'nx.json'));
   } catch {
     // Ignore if there is no package.json in the root directory.
   }
@@ -147,19 +150,15 @@ module.exports = async function run(
   ].join('-');
 
   const outputs = {
-    cwd: process.cwd(),
-    'package-json-files': packageJsonFiles,
-    lockfiles,
-    'lockfiles-hash': lockfilesHash,
-    'is-monorepo': isMonorepo,
+    lockfile,
     'dependencies-hash': dependenciesHash,
     'get-cache-dir-command': getCacheDirCommand,
-    'git-root': gitRoot,
     'hash-files': hashFiles,
     'hash-strategy': hashStrategy,
     'install-command': installCommand,
-    lockfile: lockfile,
     'node-modules-cache-prefix': nodeModulesCachePrefix,
+    'node-modules-cache-suffix':
+      hashStrategy === 'dependencies' ? `deps_${dependenciesHash}` : `lock_${lockfilesHash}`,
     'package-manager-version-command': versionCommand,
     'package-manager': packageManager,
     'working-directory-hash': workingDirectoryHash,
@@ -170,5 +169,12 @@ module.exports = async function run(
   });
 
   // Log for debugging purposes.
-  console.log(outputs);
+  console.log({
+    ...outputs,
+    'is-monorepo': isMonorepo,
+    'git-root': gitRoot,
+    lockfiles,
+    'lockfiles-hash': lockfilesHash,
+    'package-json-files': packageJsonFiles,
+  });
 };

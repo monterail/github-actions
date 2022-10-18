@@ -98,9 +98,6 @@ jobs:
         with:
           working-directory: packages/foo
 
-      - name: Debug
-        run: echo "${{ toJSON(steps.setup.outputs) }}"
-
       - name: Test if 'hash-strategy' is set to 'lockfile'
         run: |
           if [[ "${{ steps.setup.outputs.hash-strategy }}" != "lockfile" ]]
