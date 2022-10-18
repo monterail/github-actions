@@ -14,7 +14,7 @@ jobs:
     if: ${{ github.event.pull_request.draft == false }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Install dependencies
         run: npm i
@@ -34,7 +34,7 @@ jobs:
         os: [ubuntu-latest, windows-latest]
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Create example package.json
         run: cp ./.artifacts/package-json ./package.json
@@ -64,7 +64,7 @@ jobs:
     if: ${{ github.event.pull_request.draft == false }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Create example package.json and lockfile
         run: |
@@ -76,3 +76,40 @@ jobs:
         uses: ./setup-js
         with:
           working-directory: app
+
+  test-monorepo:
+    runs-on: ${{ matrix.os }}
+    if: ${{ github.event.pull_request.draft == false }}
+    strategy:
+      matrix:
+        hash-strategy: ['lockfile', 'dependencies']
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Create lockfile in the root
+        if: ${{ matrix.hash-strategy == 'lockfile' }}
+        run: cp ./.artifacts/package-lock ./package-lock.json
+
+      - name: Create example package.json inside a package
+        run: |
+          mkdir -p packages/foo
+          cp ./.artifacts/package-json-workspaces ./packages/foo/package.json
+
+      - name: Setup and install
+        uses: ./setup-js
+        id: setup
+        with:
+          working-directory: packages/foo
+
+      - name: Test if 'hash-strategy' is correct
+        shell: bash
+        run: |
+          if [[ "${{ steps.setup.outputs.hash-strategy }}" == "${{ matrix.hash-strategy }}" ]]
+          then
+            exit 0
+          else
+            exit 1
+          fi
+
