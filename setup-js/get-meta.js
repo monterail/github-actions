@@ -1,6 +1,6 @@
 const crypto = require('crypto');
 const fs = require('fs');
-const {dirname} = require('path');
+const {dirname, join} = require('path');
 
 function findGitRoot(
   /** @type {string} */
@@ -12,7 +12,7 @@ function findGitRoot(
     return null
   }
 
-  if (fs.existsSync('.git')) {
+  if (fs.existsSync(join(pathname, '.git'))) {
     return pathname
   }
 
