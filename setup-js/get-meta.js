@@ -58,7 +58,7 @@ module.exports = async function run(
 
   let isMonorepo = false;
 
-  const gitRoot = findGitRoot(__dirname);
+  const gitRoot = findGitRoot(process.cwd());
 
   if (!gitRoot) {
     core.setFailed('Failed to determine .git directory location');
