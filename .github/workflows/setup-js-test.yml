@@ -76,3 +76,29 @@ jobs:
         uses: ./setup-js
         with:
           working-directory: app
+
+  test-monorepo:
+    runs-on: ubuntu-latest
+    # if: ${{ github.event.pull_request.draft == false }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Create lockfile in the root
+        run: cp ./.artifacts/package-lock ./package-lock.json
+
+      - name: Create example package.json inside a package
+        run: |
+          mkdir -p packages/foo
+          cp ./.artifacts/package-json ./packages/foo/package.json
+
+      - name: Setup and install
+        uses: ./setup-js
+        id: setup
+        with:
+          working-directory: packages/foo
+
+      - name: Test if 'hash-strategy' is set to 'lockfile'
+        run: |
+          if [[ "${{ steps.setup.outputs.hash-strategy }}" == "lockfile" ]]; then exit 1 fi
+
