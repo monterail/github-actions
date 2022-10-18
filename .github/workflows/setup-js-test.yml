@@ -85,7 +85,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Create lockfile in the root
-        run: cp ./.artifacts/package-lock ./package-lock.json
+        run: cp ./.artifacts/package-lock-workspaces ./package-lock.json
 
       - name: Create example package.json inside a package
         run: |
