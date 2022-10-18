@@ -1,5 +1,26 @@
 const crypto = require('crypto');
 const fs = require('fs');
+const {dirname} = require('path');
+
+function findGitRoot(
+  /** @type {string} */
+  pathname,
+  /** @type {number} */
+  remainingAttempts = 5
+) {
+  if (remainingAttempts === 0) {
+    return null
+  }
+
+  if (fs.existsSync('.git')) {
+    return pathname
+  }
+
+  return findGitRoot(
+    dirname(pathname),
+    remainingAttempts - 1,
+  );
+}
 
 /**
  *
@@ -38,6 +59,8 @@ module.exports = function run(
     core.setFailed('No package.json found in current directory');
     return
   }
+
+  const gitRoot = findGitRoot(__dirname);
 
   /** @type {import('type-fest').PackageJson} */
   const packageJson = JSON.parse(
@@ -99,14 +122,15 @@ module.exports = function run(
   const outputs = {
     'dependencies-hash': dependenciesHash,
     'get-cache-dir-command': getCacheDirCommand,
-    'hash-strategy': hashStrategy,
+    'git-root': gitRoot,
     'hash-files': hashFiles,
+    'hash-strategy': hashStrategy,
     'install-command': installCommand,
     'lockfile': lockfile,
     'node-modules-cache-prefix': nodeModulesCachePrefix,
+    'package-manager-version-command': versionCommand,
     'package-manager': packageManager,
     'working-directory-hash': workingDirectoryHash,
-    'package-manager-version-command': versionCommand,
   };
 
   Object.entries(outputs).forEach(([name, value]) => {

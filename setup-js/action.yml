@@ -23,9 +23,6 @@ inputs:
     required: false
     default: '.'
 outputs:
-  metadata-json-string:
-    description: 'All metadata calculated for this action run'
-    value: ${{ toJSON(steps.metadata.outputs) }}
   dependencies-hash:
     value: ${{ steps.metadata.outputs.dependencies-hash }}
   get-cache-dir-command:
@@ -42,10 +39,10 @@ outputs:
     value: ${{ steps.metadata.outputs.node-modules-cache-prefix }}
   package-manager:
     value: ${{ steps.metadata.outputs.package-manager }}
-  working-directory-hash:
-    value: ${{ steps.metadata.outputs.working-directory-hash }}
   package-manager-version-command:
     value: ${{ steps.metadata.outputs.package-manager-version-command }}
+  working-directory-hash:
+    value: ${{ steps.metadata.outputs.working-directory-hash }}
 runs:
   using: 'composite'
   steps:
