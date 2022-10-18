@@ -68,7 +68,7 @@ runs:
 
           const script = require(requireSource);
 
-          script({
+          await script({
             github,
             core,
             glob,

@@ -42,9 +42,10 @@ function findGitRoot(
  *  runsOn: string,
  * }} RootContext */
 
-module.exports = function run(
+module.exports = async function run(
   /** @type {RootContext} */
-  { core, glob, github, inputs, runsOn }) {
+  { core, glob, github, inputs, runsOn },
+) {
 
   if (!inputs['node-version']) {
     core.warning(`It is recommended to always set 'node-version'`);
