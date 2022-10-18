@@ -104,6 +104,7 @@ jobs:
           working-directory: packages/foo
 
       - name: Test if 'hash-strategy' is correct
+        shell: bash
         run: |
           if [[ "${{ steps.setup.outputs.hash-strategy }}" == "${{ matrix.hash-strategy }}" ]]
           then
