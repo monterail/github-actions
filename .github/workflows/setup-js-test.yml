@@ -80,11 +80,15 @@ jobs:
   test-monorepo:
     runs-on: ubuntu-latest
     # if: ${{ github.event.pull_request.draft == false }}
+    strategy:
+      matrix:
+        hash-strategy: ['lockfile', 'dependencies']
     steps:
       - name: Checkout
         uses: actions/checkout@v3
 
       - name: Create lockfile in the root
+        if: ${{ matrix.hash-strategy == 'lockfile' }}
         run: cp ./.artifacts/package-lock ./package-lock.json
 
       - name: Create example package.json inside a package
@@ -98,10 +102,12 @@ jobs:
         with:
           working-directory: packages/foo
 
-      - name: Test if 'hash-strategy' is set to 'lockfile'
+      - name: Test if 'hash-strategy' is correct
         run: |
-          if [[ "${{ steps.setup.outputs.hash-strategy }}" != "lockfile" ]]
+          if [[ "${{ steps.setup.outputs.hash-strategy }}" == "${{ matrix.hash-strategy }}" ]]
           then
+            exit 0
+          else
             exit 1
           fi
 
