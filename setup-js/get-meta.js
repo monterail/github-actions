@@ -156,9 +156,8 @@ module.exports = async function run(
     'hash-files': hashFiles,
     'hash-strategy': hashStrategy,
     'install-command': installCommand,
-    'node-modules-cache-prefix': nodeModulesCachePrefix,
-    'node-modules-cache-suffix':
-      hashStrategy === 'dependencies' ? `deps_${dependenciesHash}` : `lock_${lockfilesHash}`,
+    'node-modules-cache-prefix': `${nodeModulesCachePrefix}-${hashStrategy}`,
+    'node-modules-cache-suffix': hashStrategy === 'dependencies' ? dependenciesHash : lockfilesHash,
     'package-manager-version-command': versionCommand,
     'package-manager': packageManager,
     'working-directory-hash': workingDirectoryHash,
