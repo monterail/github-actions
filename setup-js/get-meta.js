@@ -2,12 +2,10 @@ const crypto = require('crypto');
 const fs = require('fs');
 const { dirname, join } = require('path');
 
-function findGitRoot(
-  /** @type {string} */
-  pathname,
-  /** @type {number} */
-  remainingAttempts = 5,
-) {
+/**
+ * @type {(pathname: string, remainingAttempts: number | undefined) => string | null}
+ */
+function findGitRoot(pathname, remainingAttempts = 5) {
   if (remainingAttempts === 0) {
     return null;
   }
@@ -78,9 +76,6 @@ module.exports = async function run(
     // Ignore if there is no package.json in the root directory.
   }
 
-  /** @type {import('type-fest').PackageJson} */
-  const packageJson = JSON.parse(fs.readFileSync('package.json').toString());
-
   /** @type {string} */
   const packageManager = (inputs['package-manager'] || 'npm').toLowerCase();
 
@@ -96,20 +91,36 @@ module.exports = async function run(
 
   const hashFiles = `**/${lockfile}`;
 
-  const globber = await glob.create(`${gitRoot}/${hashFiles}`);
-  const files = await globber.glob();
+  const hashFilesPattern = join(gitRoot, hashFiles);
+
+  const lockfilesHash = await glob.hashFiles(hashFilesPattern);
+
+  const lockfileGlobber = await glob.create(join(gitRoot, hashFiles));
+  const lockfiles = await lockfileGlobber.glob();
+
+  const packageJsonGlobber = await glob.create(join(gitRoot, '**/package.json'));
+  const packageJsonFiles = await packageJsonGlobber.glob();
 
   const hashStrategy =
-    inputs['hash-strategy'] || (fs.existsSync(lockfile) ? 'lockfile' : 'dependencies');
+    inputs['hash-strategy'] || (lockfiles.length > 0 ? 'lockfile' : 'dependencies');
 
-  const dependenciesArray = Object.entries({
-    ...(packageJson.dependencies ?? {}),
-    ...(packageJson.devDependencies ?? {}),
-    ...(packageJson.peerDependencies ?? {}),
-    ...(packageJson.optionalDependencies ?? {}),
-    ...(packageJson.bundleDependencies ?? {}),
-    ...(packageJson.bundledDependencies ?? {}),
-  });
+  const dependenciesArray = [];
+
+  for (const packageJsonFile of hashStrategy === 'dependencies' ? packageJsonFiles : []) {
+    /** @type {import('type-fest').PackageJson} */
+    const packageJson = JSON.parse(fs.readFileSync(packageJsonFile).toString());
+
+    dependenciesArray.push(
+      ...Object.entries({
+        ...(packageJson.dependencies ?? {}),
+        ...(packageJson.devDependencies ?? {}),
+        ...(packageJson.peerDependencies ?? {}),
+        ...(packageJson.optionalDependencies ?? {}),
+        ...(packageJson.bundleDependencies ?? {}),
+        ...(packageJson.bundledDependencies ?? {}),
+      }),
+    );
+  }
 
   const dependenciesHash = crypto
     .createHash('sha256')
@@ -137,7 +148,9 @@ module.exports = async function run(
 
   const outputs = {
     cwd: process.cwd(),
-    files,
+    'package-json-files': packageJsonFiles,
+    lockfiles,
+    'lockfiles-hash': lockfilesHash,
     'is-monorepo': isMonorepo,
     'dependencies-hash': dependenciesHash,
     'get-cache-dir-command': getCacheDirCommand,
