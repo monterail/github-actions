@@ -84,7 +84,7 @@ runs:
       run: echo "dir=$(${{ steps.metadata.outputs.get-cache-dir-command }})" >> $GITHUB_OUTPUT
 
     - name: Restore node_modules cache
-      if: ${{ inputs.cache }}
+      if: ${{ inputs.cache == 'true' }}
       uses: actions/cache@v3
       with:
         path: |
