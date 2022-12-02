@@ -87,9 +87,7 @@ runs:
       if: ${{ inputs.cache == 'true' }}
       uses: actions/cache@v3
       with:
-        path: |
-          ${{ steps.global-cache-dir.outputs.dir }}
-          ${{ inputs.working-directory }}/node_modules
+        path: ${{ steps.global-cache-dir.outputs.dir }}
         key: ${{ steps.metadata.outputs.node-modules-cache-prefix }}-${{ steps.metadata.outputs.node-modules-cache-suffix }}
         restore-keys: |
           ${{ steps.metadata.outputs.node-modules-cache-prefix }}
